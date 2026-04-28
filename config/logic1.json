@@ -2,13 +2,70 @@
   "name": "급등이",
   "description": "5분봉 추세 + 일봉 거래량/시총/등락률 필터",
   "conditions": [
-    { "id": 1, "type": "volume_range",          "interval": "1d", "min": 100000, "max": null, "label": "일봉 거래량 100,000 이상" },
-    { "id": 2, "type": "market_cap_min_krw",    "value": 50000000000, "label": "시가총액 500억 이상" },
-    { "id": 3, "type": "price_change_rate_min", "value": 3.0, "label": "전일 대비 등락률 +3% 이상" },
-    { "id": 4, "type": "ma_alignment",          "interval": "5m", "ma": [5, 20, 60], "label": "5분봉 MA5 ≥ MA20 ≥ MA60" },
-    { "id": 5, "type": "ma_alignment",          "interval": "5m", "ma": [5, 20, 120], "label": "5분봉 MA5 ≥ MA20 ≥ MA120" },
-    { "id": 6, "type": "bb_breakout",           "interval": "5m", "period": 20, "stddev": 2.0, "label": "5분봉 볼린저밴드 상향돌파" },
-    { "id": 7, "type": "envelope_breakout",     "interval": "5m", "period": 12, "ratio": 2.2, "label": "5분봉 엔벨로프 +2.2% 상향돌파" },
-    { "id": 8, "type": "ma_alignment",          "interval": "60m", "ma": [5, 20, 60], "label": "60분봉 MA5 ≥ MA20 ≥ MA60" }
+    {
+      "id": "volume_daily",
+      "type": "volume_range",
+      "interval": "1d",
+      "min": 100000,
+      "max": 999999999,
+      "enabled": true,
+      "label": "일봉 거래량 100,000 이상"
+    },
+    {
+      "id": "market_cap",
+      "type": "market_cap_min_krw",
+      "min_krw": 50000000000,
+      "enabled": true,
+      "label": "시가총액 500억 이상"
+    },
+    {
+      "id": "change_rate",
+      "type": "price_change_rate_min",
+      "value": 3.0,
+      "enabled": true,
+      "label": "전일 대비 등락률 +3% 이상"
+    },
+    {
+      "id": "ma_align_5m_1",
+      "type": "ma_alignment",
+      "interval": "5m",
+      "periods": [5, 20, 60],
+      "enabled": true,
+      "label": "5분봉 MA5 ≥ MA20 ≥ MA60"
+    },
+    {
+      "id": "ma_align_5m_2",
+      "type": "ma_alignment",
+      "interval": "5m",
+      "periods": [5, 20, 120],
+      "enabled": true,
+      "label": "5분봉 MA5 ≥ MA20 ≥ MA120"
+    },
+    {
+      "id": "bb_breakout_5m",
+      "type": "bb_breakout",
+      "interval": "5m",
+      "period": 20,
+      "std": 2.0,
+      "enabled": true,
+      "label": "5분봉 볼린저밴드 상향돌파"
+    },
+    {
+      "id": "envelope_breakout_5m",
+      "type": "envelope_breakout",
+      "interval": "5m",
+      "period": 12,
+      "pct": 2.2,
+      "enabled": true,
+      "label": "5분봉 엔벨로프 +2.2% 상향돌파"
+    },
+    {
+      "id": "ma_align_60m",
+      "type": "ma_alignment",
+      "interval": "60m",
+      "periods": [5, 20, 60],
+      "enabled": true,
+      "label": "60분봉 MA5 ≥ MA20 ≥ MA60"
+    }
   ]
 }

@@ -1,1 +1,8 @@
-requests>=2.31
+flask
+flask-login
+sqlalchemy
+bcrypt
+waitress
+requests
+pandas
+numpy

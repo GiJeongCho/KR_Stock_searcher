@@ -2,15 +2,88 @@
   "name": "벌떡이",
   "description": "단기 분봉 정배열 + 일봉 필터",
   "conditions": [
-    { "id": 1,  "type": "volume_range",          "interval": "1d", "min": 50000, "max": null, "label": "일봉 거래량 50,000 이상" },
-    { "id": 2,  "type": "market_cap_min_krw",    "value": 30000000000, "label": "시가총액 300억 이상" },
-    { "id": 3,  "type": "price_change_rate_min", "value": 1.0, "label": "전일 대비 등락률 +1% 이상" },
-    { "id": 4,  "type": "ma_alignment",          "interval": "1m",  "ma": [5, 60, 120], "label": "1분봉 MA5 ≥ MA60 ≥ MA120" },
-    { "id": 5,  "type": "ma_alignment",          "interval": "1m",  "ma": [5, 120, 240], "label": "1분봉 MA5 ≥ MA120 ≥ MA240" },
-    { "id": 6,  "type": "ma_alignment",          "interval": "5m",  "ma": [5, 20, 60], "label": "5분봉 MA5 ≥ MA20 ≥ MA60" },
-    { "id": 7,  "type": "ma_gap",                "interval": "5m",  "fast": 5, "slow": 120, "max_pct": 10.0, "label": "5분봉 MA5-MA120 이격도 10% 이내" },
-    { "id": 8,  "type": "ma_alignment",          "interval": "15m", "ma": [5, 20, 60], "label": "15분봉 MA5 ≥ MA20 ≥ MA60" },
-    { "id": 9,  "type": "envelope_breakout",     "interval": "1m",  "period": 12, "ratio": 2.0, "label": "1분봉 엔벨로프 +2.0% 상향돌파" },
-    { "id": 10, "type": "envelope_breakout",     "interval": "5m",  "period": 12, "ratio": 3.0, "label": "5분봉 엔벨로프 +3.0% 상향돌파" }
+    {
+      "id": "volume_daily",
+      "type": "volume_range",
+      "interval": "1d",
+      "min": 50000,
+      "max": 999999999,
+      "enabled": true,
+      "label": "일봉 거래량 50,000 이상"
+    },
+    {
+      "id": "market_cap",
+      "type": "market_cap_min_krw",
+      "min_krw": 30000000000,
+      "enabled": true,
+      "label": "시가총액 300억 이상"
+    },
+    {
+      "id": "change_rate",
+      "type": "price_change_rate_min",
+      "value": 1.0,
+      "enabled": true,
+      "label": "전일 대비 등락률 +1% 이상"
+    },
+    {
+      "id": "ma_align_1m_1",
+      "type": "ma_alignment",
+      "interval": "1m",
+      "periods": [5, 60, 120],
+      "enabled": true,
+      "label": "1분봉 MA5 ≥ MA60 ≥ MA120"
+    },
+    {
+      "id": "ma_align_1m_2",
+      "type": "ma_alignment",
+      "interval": "1m",
+      "periods": [5, 120, 240],
+      "enabled": true,
+      "label": "1분봉 MA5 ≥ MA120 ≥ MA240"
+    },
+    {
+      "id": "ma_align_5m",
+      "type": "ma_alignment",
+      "interval": "5m",
+      "periods": [5, 20, 60],
+      "enabled": true,
+      "label": "5분봉 MA5 ≥ MA20 ≥ MA60"
+    },
+    {
+      "id": "ma_gap_5m",
+      "type": "ma_gap",
+      "interval": "5m",
+      "fast": 5,
+      "slow": 120,
+      "threshold_pct": 10.0,
+      "enabled": true,
+      "label": "5분봉 MA5-MA120 이격도 10% 이내"
+    },
+    {
+      "id": "ma_align_15m",
+      "type": "ma_alignment",
+      "interval": "15m",
+      "periods": [5, 20, 60],
+      "enabled": true,
+      "label": "15분봉 MA5 ≥ MA20 ≥ MA60"
+    },
+    {
+      "id": "envelope_breakout_1m",
+      "type": "envelope_breakout",
+      "interval": "1m",
+      "period": 12,
+      "pct": 2.0,
+      "enabled": true,
+      "label": "1분봉 엔벨로프 +2.0% 상향돌파"
+    },
+    {
+      "id": "envelope_breakout_5m",
+      "type": "envelope_breakout",
+      "interval": "5m",
+      "period": 12,
+      "pct": 3.0,
+      "enabled": true,
+      "label": "5분봉 엔벨로프 +3.0% 상향돌파"
+    }
   ]
 }

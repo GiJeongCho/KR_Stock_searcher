@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KR Stock Screener</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+
+header {
+  background: #1a1d27; border-bottom: 1px solid #2d3148;
+  padding: 12px 20px; display: flex; align-items: center; gap: 14px;
+}
+header h1 { font-size: 1rem; font-weight: 700; color: #7dd3fc; }
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.universe-info { font-size: 0.72rem; color: #6b7280; }
+.universe-info b { color: #a78bfa; }
+.session-badge { font-size: 0.68rem; padding: 3px 8px; border-radius: 10px; font-weight: 700; }
+.session-open { background: #14532d; color: #86efac; }
+.session-closed { background: #374151; color: #9ca3af; }
+
+.layout { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - 49px); }
+
+.left { background: #13161f; border-right: 1px solid #2d3148; display: flex; flex-direction: column; overflow: hidden; }
+
+.tab-bar { display: flex; border-bottom: 1px solid #2d3148; }
+.tab { flex: 1; padding: 10px 0; text-align: center; cursor: pointer; font-size: 0.78rem; color: #6b7280; border-bottom: 2px solid transparent; transition: .15s; }
+.tab.active { color: #7dd3fc; border-bottom-color: #7dd3fc; background: #1a1d27; }
+
+.section { padding: 12px 14px; border-bottom: 1px solid #1e2130; }
+.section-label { font-size: 0.67rem; text-transform: uppercase; letter-spacing: .8px; color: #4b5563; margin-bottom: 8px; }
+
+.btn { padding: 7px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.78rem; font-weight: 600; transition: .15s; white-space: nowrap; }
+.btn-blue   { background: #1d4ed8; color: #fff; }
+.btn-blue:hover   { background: #2563eb; }
+.btn-gray   { background: #374151; color: #d1d5db; }
+.btn-gray:hover   { background: #4b5563; }
+.btn-sm { padding: 4px 9px; font-size: 0.7rem; }
+
+.ticker-input-row { display: flex; gap: 6px; }
+.ticker-input-row input { flex: 1; background: #1e2130; border: 1px solid #374151; border-radius: 6px; padding: 7px 9px; color: #e2e8f0; font-size: 0.82rem; outline: none; }
+.ticker-input-row input:focus { border-color: #7dd3fc; }
+.ticker-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; min-height: 24px; }
+.ticker-tag { display: flex; align-items: center; gap: 4px; background: #1e2130; border: 1px solid #2d3148; border-radius: 4px; padding: 3px 8px; font-size: 0.75rem; }
+.ticker-tag span { color: #7dd3fc; font-weight: 700; cursor: pointer; transition: opacity .15s; }
+.ticker-tag span:hover { opacity: .7; }
+.ticker-tag button { background: none; border: none; color: #4b5563; cursor: pointer; font-size: 1rem; line-height: 1; }
+.ticker-tag button:hover { color: #f87171; }
+
+.logic-editor { flex: 1; overflow-y: auto; }
+.logic-head { padding: 10px 14px; background: #1a1d27; border-bottom: 1px solid #2d3148; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1; }
+.logic-name-badge { font-size: 0.8rem; font-weight: 700; color: #a78bfa; }
+.logic-desc { font-size: 0.68rem; color: #6b7280; }
+.save-btn { background: #1d4ed8; color: #fff; border: none; border-radius: 4px; padding: 5px 12px; font-size: 0.72rem; cursor: pointer; }
+.save-btn:hover { background: #2563eb; }
+
+.cond-item { padding: 9px 14px; border-bottom: 1px solid #1a1c25; display: flex; align-items: flex-start; gap: 8px; }
+.cond-item:hover { background: #171a24; }
+.cond-item.disabled { opacity: .4; }
+.cond-toggle { margin-top: 2px; cursor: pointer; accent-color: #7dd3fc; flex-shrink: 0; }
+.cond-body { flex: 1; }
+.cond-label { font-size: 0.75rem; color: #cbd5e1; margin-bottom: 5px; }
+.cond-params { display: flex; flex-wrap: wrap; gap: 4px; }
+.param-group { display: flex; align-items: center; gap: 3px; background: #1e2130; border: 1px solid #2a2d3e; border-radius: 4px; padding: 3px 7px; }
+.param-group label { font-size: 0.65rem; color: #6b7280; }
+.param-group input[type=number] { width: 64px; background: none; border: none; color: #fbbf24; font-size: 0.76rem; text-align: center; outline: none; }
+
+.right { display: flex; flex-direction: column; overflow: hidden; }
+
+.chart-wrap { flex: 0 0 45%; max-height: 45vh; border-bottom: 1px solid #2d3148; display: flex; flex-direction: column; }
+.chart-wrap.hidden { display: none; }
+.chart-header { display: flex; align-items: center; justify-content: space-between; padding: 5px 14px; background: #1a1d27; border-bottom: 1px solid #2d3148; flex-shrink: 0; }
+.chart-ticker-name { font-size: 0.9rem; font-weight: 800; color: #7dd3fc; }
+.chart-close-btn { background: none; border: none; color: #6b7280; cursor: pointer; font-size: 1.1rem; padding: 2px 6px; border-radius: 4px; }
+.chart-close-btn:hover { color: #f87171; background: #1e2130; }
+.chart-container { flex: 1; min-height: 0; }
+.chart-search-input { background: #1e2130; border: 1px solid #374151; border-radius: 5px; padding: 4px 8px; color: #e2e8f0; font-size: 0.78rem; outline: none; width: 130px; }
+.chart-search-input:focus { border-color: #7dd3fc; }
+
+.right-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+
+.scan-status { background: #13161f; border-bottom: 1px solid #2d3148; padding: 10px 20px; }
+.status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.status-label { font-size: 0.78rem; font-weight: 600; }
+.status-msg { font-size: 0.73rem; color: #9ca3af; flex: 1; }
+.match-badge { background: #14532d; color: #86efac; font-size: 0.72rem; padding: 2px 9px; border-radius: 12px; font-weight: 700; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 6px #22c55e; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.progress-bar-wrap { background: #1e2130; border-radius: 4px; height: 5px; overflow: hidden; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, #1d4ed8, #7dd3fc); border-radius: 4px; width: 0; transition: width .3s; }
+.phase-labels { display: flex; gap: 14px; margin-top: 5px; }
+.phase-item { font-size: 0.67rem; color: #4b5563; display: flex; align-items: center; gap: 4px; }
+.phase-dot { width: 6px; height: 6px; border-radius: 50%; background: #374151; }
+.phase-dot.active { background: #22c55e; box-shadow: 0 0 5px #22c55e; }
+.phase-dot.done { background: #3b82f6; }
+
+.cond-stats { background: #111318; border-bottom: 1px solid #2d3148; padding: 8px 16px; }
+.cond-stats.hidden { display: none; }
+.cond-stats-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+.cond-stats-toggle span { font-size: 0.7rem; color: #6b7280; }
+.cond-stats-toggle:hover span { color: #9ca3af; }
+.cond-stats-body { margin-top: 6px; }
+.stat-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 0.7rem; }
+.stat-label { width: 200px; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+.stat-bar-wrap { flex: 1; background: #1e2130; border-radius: 3px; height: 10px; overflow: hidden; display: flex; }
+.stat-bar-pass { background: #166534; height: 100%; transition: width .3s; }
+.stat-bar-fail { background: #7f1d1d; height: 100%; transition: width .3s; }
+.stat-nums { font-size: 0.65rem; color: #6b7280; width: 100px; text-align: right; flex-shrink: 0; }
+
+.results-header { padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e2130; }
+.results-title { font-size: 0.8rem; font-weight: 600; }
+.results-meta { font-size: 0.7rem; color: #6b7280; }
+
+.results-body { display: flex; flex-direction: column; }
+.results-section { padding: 0 14px 10px; }
+.results-section:first-child { padding-top: 14px; }
+.section-divider { display: flex; align-items: center; gap: 10px; padding: 6px 14px; }
+.section-divider span { font-size: 0.68rem; color: #4b5563; white-space: nowrap; }
+.section-divider::before, .section-divider::after { content: ''; flex: 1; height: 1px; background: #2d3148; }
+.card-grid { display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
+
+.result-card { background: #13161f; border: 1px solid #2d3148; border-radius: 8px; width: 280px; overflow: hidden; transition: border-color .2s, opacity .3s; }
+.result-card.active { border-color: #166534; }
+.result-card.history { border-color: #374151; opacity: 0.5; }
+.card-head { padding: 9px 12px; background: #1a1d27; display: flex; justify-content: space-between; align-items: center; }
+.card-head-left { display: flex; align-items: center; gap: 6px; }
+.card-ticker { font-size: 0.88rem; font-weight: 800; cursor: pointer; transition: color .15s; }
+.card-ticker:hover { color: #7dd3fc; text-decoration: underline; }
+.card-ticker-name { font-size: 0.72rem; color: #9ca3af; font-weight: 400; }
+.card-fav { background: none; border: none; cursor: pointer; font-size: 0.9rem; padding: 0 2px; transition: .15s; line-height: 1; }
+.card-fav.in-wl { color: #fbbf24; }
+.card-fav:not(.in-wl) { color: #4b5563; }
+.card-fav:hover { transform: scale(1.2); }
+.card-badge { font-size: 0.68rem; padding: 2px 8px; border-radius: 20px; font-weight: 700; }
+.badge-pass    { background: #14532d; color: #86efac; }
+.badge-fail    { background: #2d1515; color: #fca5a5; }
+.card-meta { font-size: 0.65rem; color: #4b5563; padding: 3px 12px; background: #111318; display: flex; gap: 8px; }
+.card-score { font-size: 0.7rem; color: #6b7280; padding: 4px 12px; background: #111318; }
+.card-conds { padding: 6px 0; }
+.cond-row { display: flex; align-items: center; gap: 6px; padding: 3px 12px; font-size: 0.7rem; }
+.cond-row:hover { background: #1a1d27; }
+.ci { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: .58rem; }
+.ci-pass   { background: #14532d; color: #86efac; }
+.ci-fail   { background: #450a0a; color: #fca5a5; }
+.ci-skip   { background: #1e2130; color: #6b7280; }
+.ct { color: #9ca3af; }
+
+.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #374151; gap: 10px; }
+.empty-state p { font-size: 0.82rem; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>KR Stock Screener</h1>
+  <span class="session-badge" id="sessionBadge">-</span>
+  <div class="header-right">
+    <div class="live-dot" id="liveDot" title="백그라운드 모니터링 중"></div>
+    <span class="universe-info" id="universeInfo">종목 DB: 로딩 중...</span>
+    <button class="btn btn-gray btn-sm" onclick="refreshUniverse()">갱신</button>
+    <span style="color:#6b7280;font-size:0.72rem" id="userLabel"></span>
+    <button class="btn btn-gray btn-sm" onclick="doLogout()">로그아웃</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <div class="left">
+    <div class="tab-bar">
+      <div class="tab active" id="tab-logic1" onclick="switchTab('logic1')">급등이</div>
+      <div class="tab" id="tab-logic2" onclick="switchTab('logic2')">벌떡이</div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">즐겨찾기 종목</div>
+      <div class="ticker-input-row">
+        <input type="text" id="tickerInput" placeholder="005930, 035720 ..."
+               onkeydown="if(event.key==='Enter') addTicker()">
+        <button class="btn btn-blue btn-sm" onclick="addTicker()">추가</button>
+      </div>
+      <div class="ticker-list" id="tickerList"></div>
+    </div>
+
+    <div class="logic-editor" id="logicEditor">
+      <div style="padding:30px;text-align:center;color:#4b5563;font-size:.8rem">로딩 중...</div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="chart-wrap hidden" id="chartWrap">
+      <div class="chart-header">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="chart-ticker-name" id="chartTickerName">-</span>
+          <button class="card-fav" id="chartFavBtn" onclick="toggleFav(currentChartTicker)" title="즐겨찾기"></button>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="text" class="chart-search-input" id="chartSearchInput" placeholder="종목코드 검색..."
+                 onkeydown="if(event.key==='Enter') openChart(this.value.trim())">
+          <button class="chart-close-btn" onclick="closeChart()" title="차트 닫기">&#10005;</button>
+        </div>
+      </div>
+      <div class="chart-container" id="chartContainer"></div>
+    </div>
+
+    <div class="right-scroll">
+      <div class="scan-status" id="scanStatus">
+        <div class="status-row">
+          <span class="status-label" id="statusLabel">시작 중...</span>
+          <span class="status-msg" id="statusMsg">백그라운드 모니터링 자동 실행 중</span>
+          <span class="match-badge" id="matchBadge">0개</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="phase-labels">
+          <div class="phase-item"><div class="phase-dot" id="phase1dot"></div> 선필터</div>
+          <div class="phase-item"><div class="phase-dot" id="phase2dot"></div> 분봉 로드</div>
+          <div class="phase-item"><div class="phase-dot" id="phase3dot"></div> 조건 평가</div>
+        </div>
+      </div>
+
+      <div class="cond-stats hidden" id="condStats">
+        <div class="cond-stats-toggle" onclick="document.getElementById('condStatsBody').classList.toggle('hidden')">
+          <span>&#9656; 조건별 필터 통계</span>
+        </div>
+        <div class="cond-stats-body hidden" id="condStatsBody"></div>
+      </div>
+
+      <div class="results-header">
+        <span class="results-title">스캔 결과</span>
+        <span class="results-meta" id="resultsMeta">-</span>
+      </div>
+
+      <div class="results-body" id="resultsBody">
+        <div class="empty-state" id="emptyState">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <p>백그라운드에서 자동 스캔 중... 조건 충족 종목이 나타나면 여기에 표시됩니다</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentLogicId = 'logic1';
+let logicData = {};
+let watchlist = [];
+let tickerNames = {};
+let pollTimer = null;
+
+async function init() {
+  await Promise.all([loadLogic('logic1'), loadLogic('logic2'), loadWatchlist(), loadMe()]);
+  renderLogicEditor();
+  loadUniverseInfo();
+  updateSessionBadge();
+  setInterval(updateSessionBadge, 60000);
+  startPolling();
+}
+
+function updateSessionBadge() {
+  const badge = document.getElementById('sessionBadge');
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes();
+  const t = h * 60 + m;
+  let label, cls;
+  if (t >= 510 && t < 540) { label = '장전'; cls = 'session-closed'; }
+  else if (t >= 540 && t < 930) { label = '정규장'; cls = 'session-open'; }
+  else if (t >= 930 && t < 960) { label = '장후'; cls = 'session-closed'; }
+  else { label = '장외'; cls = 'session-closed'; }
+  badge.textContent = label;
+  badge.className = 'session-badge ' + cls;
+}
+
+async function loadMe() {
+  const res = await fetch('/api/me');
+  const data = await res.json();
+  document.getElementById('userLabel').textContent = data.logged_in ? data.username : '';
+}
+
+async function doLogout() {
+  await fetch('/api/logout', {method: 'POST'});
+  window.location.href = '/login';
+}
+
+async function loadUniverseInfo() {
+  const res = await fetch('/api/universe/info');
+  const data = await res.json();
+  const el = document.getElementById('universeInfo');
+  if (data.cached) {
+    el.innerHTML = '\uC885\uBAA9 DB: <b>' + data.count.toLocaleString() + '\uAC1C</b> (' + data.age_hours + 'h \uC804 \uAC31\uC2E0' + (data.stale ? ' !' : '') + ')';
+  } else {
+    el.innerHTML = '\uC885\uBAA9 DB: <b>\uBBF8\uCE90\uC2DC</b> (\uC790\uB3D9 \uB2E4\uC6B4\uB85C\uB4DC \uC911)';
+  }
+}
+
+async function refreshUniverse() {
+  document.getElementById('universeInfo').textContent = '\uAC31\uC2E0 \uC911...';
+  await fetch('/api/universe/refresh', {method: 'POST'});
+  await loadUniverseInfo();
+}
+
+async function loadWatchlist() {
+  const res = await fetch('/api/watchlist');
+  watchlist = await res.json();
+  if (watchlist.length > 0) {
+    const namesRes = await fetch('/api/ticker_names', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({codes: watchlist})
+    });
+    Object.assign(tickerNames, await namesRes.json());
+  }
+  renderWatchlist();
+}
+
+function renderWatchlist() {
+  document.getElementById('tickerList').innerHTML = watchlist.map(t => {
+    const name = tickerNames[t] || '';
+    return '<div class="ticker-tag"><span onclick="openChart(\'' + t + '\')">' + t + (name ? ' ' + name : '') + '</span><button onclick="removeTicker(\'' + t + '\')">&#215;</button></div>';
+  }).join('');
+}
+
+async function addTicker() {
+  const input = document.getElementById('tickerInput');
+  const tickers = input.value.split(/[\s,]+/).filter(Boolean);
+  for (const t of tickers) {
+    await fetch('/api/watchlist', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ticker: t.trim()})
+    });
+  }
+  input.value = '';
+  await loadWatchlist();
+}
+
+async function removeTicker(t) {
+  await fetch('/api/watchlist/' + t, {method: 'DELETE'});
+  await loadWatchlist();
+}
+
+async function toggleFav(ticker) {
+  if (!ticker) return;
+  if (watchlist.includes(ticker)) {
+    await fetch('/api/watchlist/' + ticker, {method: 'DELETE'});
+  } else {
+    await fetch('/api/watchlist', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ticker: ticker})
+    });
+  }
+  await loadWatchlist();
+  updateChartFavBtn();
+}
+
+let currentChartTicker = '';
+function updateChartFavBtn() {
+  const btn = document.getElementById('chartFavBtn');
+  if (!btn || !currentChartTicker) return;
+  const inWl = watchlist.includes(currentChartTicker);
+  btn.textContent = inWl ? '\u2605' : '\u2606';
+  btn.className = 'card-fav ' + (inWl ? 'in-wl' : '');
+}
+
+async function switchTab(id) {
+  currentLogicId = id;
+  ['logic1','logic2'].forEach(l => {
+    document.getElementById('tab-' + l).classList.toggle('active', l === id);
+  });
+  renderLogicEditor();
+  await fetch('/api/switch_logic', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({logic_id: id})
+  });
+}
+
+async function loadLogic(id) {
+  const res = await fetch('/api/logic/' + id);
+  logicData[id] = await res.json();
+}
+
+async function saveLogic() {
+  await fetch('/api/logic/' + currentLogicId, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(logicData[currentLogicId])
+  });
+  showToast('\uC800\uC7A5 \uC644\uB8CC');
+}
+
+function renderLogicEditor() {
+  const logic = logicData[currentLogicId];
+  if (!logic) return;
+  document.getElementById('logicEditor').innerHTML =
+    '<div class="logic-head"><div><div class="logic-name-badge">' + logic.name + '</div><div class="logic-desc">' + logic.description + '</div></div><button class="save-btn" onclick="saveLogic()">\uC800\uC7A5</button></div>' +
+    logic.conditions.map(function(c, i) { return renderCond(c, i); }).join('');
+}
+
+function renderCond(cond, idx) {
+  var params = getParams(cond);
+  return '<div class="cond-item ' + (!cond.enabled ? 'disabled' : '') + '">' +
+    '<input type="checkbox" class="cond-toggle" ' + (cond.enabled ? 'checked' : '') +
+    ' onchange="toggleCond(\'' + cond.id + '\', this.checked)">' +
+    '<div class="cond-body"><div class="cond-label">' + cond.label + '</div><div class="cond-params">' +
+    params.map(function(p) {
+      return '<div class="param-group"><label>' + p.label + '</label>' +
+        '<input type="number" value="' + p.displayValue + '" step="' + (p.step||1) + '" min="' + (p.min||0) + '"' +
+        ' onchange="updateParam(\'' + cond.id + '\',\'' + p.key + '\',this.value,' + (!!p.isArray) + ',' + (p.arrayIdx!=null?p.arrayIdx:'undefined') + ',' + (p.scale||1) + ')"></div>';
+    }).join('') +
+    '</div></div></div>';
+}
+
+function getParams(c) {
+  var t = c.type, p = [];
+  if (t === 'ma_alignment')
+    c.periods.forEach(function(v,i) { p.push({label:'MA'+(i+1), key:'periods', displayValue:v, isArray:true, arrayIdx:i}); });
+  else if (t === 'bb_breakout' || t === 'bb_above')
+    p.push({label:'\uAE30\uAC04',key:'period',displayValue:c.period},{label:'\uD45C\uC900\uD3B8\uCC28',key:'std',displayValue:c.std,step:.1,min:.1});
+  else if (t === 'envelope_breakout')
+    p.push({label:'\uAE30\uAC04',key:'period',displayValue:c.period},{label:'%',key:'pct',displayValue:c.pct,step:.1,min:.1});
+  else if (t === 'ma_gap')
+    p.push({label:'\uBE60\uB978MA',key:'fast',displayValue:c.fast},{label:'\uB290\uB9B0MA',key:'slow',displayValue:c.slow},{label:'\uD5C8\uC6A9%',key:'threshold_pct',displayValue:c.threshold_pct,step:.5,min:.1});
+  else if (t === 'ma_compare')
+    p.push({label:'\uBE60\uB978MA',key:'fast',displayValue:c.fast},{label:'\uB290\uB9B0MA',key:'slow',displayValue:c.slow});
+  else if (t === 'volume_range')
+    p.push({label:'\uCD5C\uC18C',key:'min',displayValue:c.min,step:10000},{label:'\uCD5C\uB300',key:'max',displayValue:c.max,step:1000000});
+  else if (t === 'market_cap_min_krw')
+    p.push({label:'\uCD5C\uC18C(\uC5B5\uC6D0)',key:'min_krw',displayValue:Math.round(c.min_krw/100000000),step:10,scale:100000000});
+  else if (t === 'price_change_rate_min')
+    p.push({label:'\uCD5C\uC18C%',key:'value',displayValue:c.value,step:.5,min:-30});
+  else if (t === 'upper_limit_proximity')
+    p.push({label:'\uBC94\uC704%',key:'pct',displayValue:c.pct||5,step:1,min:1});
+  else if (t === 'bb_upper_only')
+    p.push({label:'\uAE30\uAC04',key:'period',displayValue:c.period},{label:'\uD45C\uC900\uD3B8\uCC28',key:'std',displayValue:c.std,step:.1,min:.1});
+  else if (t === 'price_ma_offset')
+    p.push({label:'\uAE30\uAC04',key:'period',displayValue:c.period},{label:'\uC624\uD504\uC14B%',key:'offset_pct',displayValue:c.offset_pct,step:.1,min:0});
+  return p;
+}
+
+function toggleCond(id, enabled) {
+  var c = logicData[currentLogicId].conditions.find(function(x) { return x.id === id; });
+  if (c) { c.enabled = enabled; renderLogicEditor(); }
+}
+
+function updateParam(condId, key, val, isArray, arrIdx, scale) {
+  var c = logicData[currentLogicId].conditions.find(function(x) { return x.id === condId; });
+  if (!c) return;
+  var num = parseFloat(val);
+  if (scale && scale !== 1) num = num * scale;
+  if (isArray) c[key][arrIdx] = Number.isInteger(c[key][arrIdx]) ? Math.round(num) : num;
+  else c[key] = Number.isInteger(c[key]) ? Math.round(num) : num;
+}
+
+function startPolling() {
+  pollResults();
+  pollTimer = setInterval(pollResults, 5000);
+}
+
+async function pollResults() {
+  try {
+    const res = await fetch('/api/results');
+    const data = await res.json();
+    updateUI(data);
+  } catch (e) {
+    document.getElementById('statusMsg').textContent = '\uC11C\uBC84 \uC5F0\uACB0 \uC2E4\uD328...';
+  }
+}
+
+function updateUI(data) {
+  const dot = document.getElementById('liveDot');
+  dot.style.background = data.running ? '#22c55e' : '#ef4444';
+  dot.style.boxShadow = data.running ? '0 0 6px #22c55e' : '0 0 6px #ef4444';
+
+  document.getElementById('statusMsg').textContent = data.status_msg;
+  document.getElementById('progressBar').style.width = Math.min(Math.max(data.progress_pct, 0), 100) + '%';
+
+  const phase = data.phase;
+  const round = data.round;
+  document.getElementById('statusLabel').textContent =
+    phase === -1 ? 'R#' + round + ' \uC644\uB8CC' :
+    phase === 0 ? (round > 0 ? 'R#' + round + ' \uB300\uAE30' : '\uC2DC\uC791 \uC911...') :
+    phase === 1 ? 'R#' + round + ' \uC120\uD544\uD130' :
+    phase === 2 ? 'R#' + round + ' \uBD84\uBD09 \uB85C\uB4DC' :
+    phase === 3 ? 'R#' + round + ' \uC870\uAC74 \uD3C9\uAC00' : '\uB300\uAE30';
+
+  ['phase1dot','phase2dot','phase3dot'].forEach(function(id, i) {
+    var d = document.getElementById(id);
+    var p = i + 1;
+    if (phase === -1) d.className = 'phase-dot done';
+    else if (p < phase) d.className = 'phase-dot done';
+    else if (p === phase) d.className = 'phase-dot active';
+    else d.className = 'phase-dot';
+  });
+
+  var activeList = data.active || [];
+  var historyList = data.history || [];
+
+  activeList.forEach(function(d) {
+    if (d.result && d.result.ticker_name) tickerNames[d.result.ticker] = d.result.ticker_name;
+  });
+
+  document.getElementById('matchBadge').textContent = activeList.length + '\uAC1C';
+  document.getElementById('resultsMeta').textContent =
+    'R#' + round + ' | \uCDA9\uC871 ' + activeList.length + '\uAC1C | \uC774\uB825 ' + historyList.length + '\uAC1C';
+
+  renderResults(activeList, historyList);
+  renderCondStats(data.cond_stats || {});
+}
+
+function renderCondStats(stats) {
+  var wrap = document.getElementById('condStats');
+  var body = document.getElementById('condStatsBody');
+  var keys = Object.keys(stats);
+  if (keys.length === 0) { wrap.classList.add('hidden'); return; }
+  wrap.classList.remove('hidden');
+
+  var toggle = wrap.querySelector('.cond-stats-toggle span');
+  var isOpen = !body.classList.contains('hidden');
+  toggle.innerHTML = (isOpen ? '&#9662;' : '&#9656;') + ' \uC870\uAC74\uBCC4 \uD544\uD130 \uD1B5\uACC4';
+
+  body.innerHTML = keys.map(function(k) {
+    var s = stats[k];
+    var total = s.pass + s.fail + s.skip;
+    if (total === 0) return '';
+    var passPct = (s.pass / total * 100).toFixed(1);
+    var failPct = (s.fail / total * 100).toFixed(1);
+    return '<div class="stat-row"><div class="stat-label" title="' + s.label + '">' + s.label + '</div><div class="stat-bar-wrap"><div class="stat-bar-pass" style="width:' + passPct + '%"></div><div class="stat-bar-fail" style="width:' + failPct + '%"></div></div><div class="stat-nums">\u2713' + s.pass.toLocaleString() + ' \u2717' + s.fail.toLocaleString() + '</div></div>';
+  }).join('');
+}
+
+function renderResults(activeList, historyList) {
+  var body = document.getElementById('resultsBody');
+
+  if (activeList.length === 0 && historyList.length === 0) {
+    body.innerHTML = '<div class="empty-state"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p>\uBC31\uADF8\uB77C\uC6B4\uB4DC\uC5D0\uC11C \uC790\uB3D9 \uC2A4\uCE94 \uC911... \uC870\uAC74 \uCDA9\uC871 \uC885\uBAA9\uC774 \uB098\uD0C0\uB098\uBA74 \uC5EC\uAE30\uC5D0 \uD45C\uC2DC\uB429\uB2C8\uB2E4</p></div>';
+    return;
+  }
+
+  var html = '';
+  if (activeList.length > 0) {
+    html += '<div class="results-section"><div class="section-divider"><span>\uC870\uAC74 \uCDA9\uC871 \uC911 (' + activeList.length + ')</span></div><div class="card-grid">' +
+      activeList.map(function(d) { return buildCard(d.result, 'active', d.found_at, d.updated_at); }).join('') + '</div></div>';
+  }
+  if (historyList.length > 0) {
+    html += '<div class="results-section"><div class="section-divider"><span>\uC774\uC804 \uBC1C\uACAC \uC774\uB825 (' + historyList.length + ')</span></div><div class="card-grid">' +
+      historyList.map(function(d) { return buildCard(d.result, 'history', d.found_at, d.exited_at); }).join('') + '</div></div>';
+  }
+  body.innerHTML = html;
+}
+
+function buildCard(r, cls, dateA, dateB) {
+  var isActive = cls === 'active';
+  var metaHtml = isActive
+    ? '<span>\uBC1C\uACAC: ' + dateA + '</span><span>\uAC31\uC2E0: ' + (dateB || dateA) + '</span>'
+    : '<span>\uBC1C\uACAC: ' + dateA + '</span><span>\uC774\uD0C8: ' + dateB + '</span>';
+
+  var inWl = watchlist.includes(r.ticker);
+  var tName = r.ticker_name || tickerNames[r.ticker] || '';
+  return '<div class="result-card ' + cls + '">' +
+    '<div class="card-head"><div class="card-head-left">' +
+    '<span class="card-ticker" onclick="openChart(\'' + r.ticker + '\')">' + r.ticker + '</span>' +
+    '<span class="card-ticker-name">' + tName + '</span>' +
+    '<button class="card-fav ' + (inWl ? 'in-wl' : '') + '" onclick="toggleFav(\'' + r.ticker + '\')" title="' + (inWl ? '\uC990\uACA8\uCC3E\uAE30 \uD574\uC81C' : '\uC990\uACA8\uCC3E\uAE30 \uCD94\uAC00') + '">' + (inWl ? '\u2605' : '\u2606') + '</button>' +
+    '</div><span class="card-badge ' + (isActive ? 'badge-pass' : 'badge-fail') + '">' + (isActive ? '\u2713 \uCDA9\uC871' : '\uC774\uD0C8') + '</span></div>' +
+    '<div class="card-meta">' + metaHtml + '</div>' +
+    '<div class="card-score">' + r.pass_count + ' / ' + r.total_count + ' \uC870\uAC74 \uCDA9\uC871</div>' +
+    '<div class="card-conds">' +
+    r.conditions.map(function(c) {
+      var ci = 'ci-skip', icon = '\u2212';
+      if (c.pass === true) { ci = 'ci-pass'; icon = '\u2713'; }
+      else if (c.pass === false) { ci = 'ci-fail'; icon = '\u2717'; }
+      return '<div class="cond-row"><div class="ci ' + ci + '">' + icon + '</div><div class="ct">' + c.label + '</div></div>';
+    }).join('') +
+    '</div></div>';
+}
+
+function openChart(code) {
+  if (!code) return;
+  code = code.trim();
+  currentChartTicker = code;
+
+  document.getElementById('chartWrap').classList.remove('hidden');
+  var name = tickerNames[code] || '';
+  document.getElementById('chartTickerName').textContent = code + (name ? ' ' + name : '');
+  document.getElementById('chartSearchInput').value = '';
+  updateChartFavBtn();
+
+  var container = document.getElementById('chartContainer');
+  container.innerHTML = '';
+
+  var widget = document.createElement('div');
+  widget.className = 'tradingview-widget-container';
+  widget.style.cssText = 'height:100%;width:100%;';
+  widget.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%;width:100%;"></div>';
+
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+  script.async = true;
+  script.textContent = JSON.stringify({
+    autosize: true,
+    symbol: 'KRX:' + code,
+    interval: 'D',
+    timezone: 'Asia/Seoul',
+    theme: 'dark',
+    style: '1',
+    locale: 'kr',
+    hide_top_toolbar: false,
+    hide_legend: false,
+    allow_symbol_change: true,
+    save_image: false,
+    calendar: false,
+    support_host: 'https://www.tradingview.com'
+  });
+
+  widget.appendChild(script);
+  container.appendChild(widget);
+}
+
+function closeChart() {
+  document.getElementById('chartWrap').classList.add('hidden');
+  document.getElementById('chartContainer').innerHTML = '';
+  currentChartTicker = '';
+}
+
+function showToast(msg, type) {
+  type = type || 'info';
+  var t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:18px;right:18px;padding:9px 15px;border-radius:7px;font-size:.78rem;z-index:9999;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.5);background:' + (type==='error'?'#7f1d1d':type==='warn'?'#78350f':'#1e3a5f') + ';';
+  document.body.appendChild(t);
+  setTimeout(function() { t.remove(); }, 3000);
+}
+
+init();
+</script>
+</body>
+</html>

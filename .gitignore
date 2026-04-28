@@ -1,0 +1,23 @@
+# --- Kiwoom secrets (절대 커밋 금지) -------------------------
+config/kiwoom.json
+.env
+*.key
+*.secret
+
+# --- Python ---------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# --- Generated cache / DB -------------------------------------
+config/kr_tickers.json
+data/*.db
+data/*.sqlite
+
+# --- IDE ------------------------------------------------------
+.vscode/
+.idea/
+.cursor/

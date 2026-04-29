@@ -1,30 +1,7 @@
 {
   "name": "급등이",
-  "description": "5분봉 추세 + 일봉 거래량/시총/등락률 필터",
+  "description": "5분봉 추세 + 볼린저/엔벨로프 돌파",
   "conditions": [
-    {
-      "id": "volume_daily",
-      "type": "volume_range",
-      "interval": "1d",
-      "min": 100000,
-      "max": 999999999,
-      "enabled": true,
-      "label": "일봉 거래량 100,000 이상"
-    },
-    {
-      "id": "market_cap",
-      "type": "market_cap_min_krw",
-      "min_krw": 50000000000,
-      "enabled": true,
-      "label": "시가총액 500억 이상"
-    },
-    {
-      "id": "change_rate",
-      "type": "price_change_rate_min",
-      "value": 3.0,
-      "enabled": true,
-      "label": "전일 대비 등락률 +3% 이상"
-    },
     {
       "id": "ma_align_5m_1",
       "type": "ma_alignment",

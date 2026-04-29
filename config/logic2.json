@@ -1,30 +1,7 @@
 {
   "name": "벌떡이",
-  "description": "단기 분봉 정배열 + 일봉 필터",
+  "description": "단기 분봉 정배열 + 엔벨로프 돌파",
   "conditions": [
-    {
-      "id": "volume_daily",
-      "type": "volume_range",
-      "interval": "1d",
-      "min": 50000,
-      "max": 999999999,
-      "enabled": true,
-      "label": "일봉 거래량 50,000 이상"
-    },
-    {
-      "id": "market_cap",
-      "type": "market_cap_min_krw",
-      "min_krw": 30000000000,
-      "enabled": true,
-      "label": "시가총액 300억 이상"
-    },
-    {
-      "id": "change_rate",
-      "type": "price_change_rate_min",
-      "value": 1.0,
-      "enabled": true,
-      "label": "전일 대비 등락률 +1% 이상"
-    },
     {
       "id": "ma_align_1m_1",
       "type": "ma_alignment",
@@ -55,7 +32,7 @@
       "interval": "5m",
       "fast": 5,
       "slow": 120,
-      "threshold_pct": 10.0,
+      "threshold_pct": 10,
       "enabled": true,
       "label": "5분봉 MA5-MA120 이격도 10% 이내"
     },
@@ -84,6 +61,24 @@
       "pct": 3.0,
       "enabled": true,
       "label": "5분봉 엔벨로프 +3.0% 상향돌파"
+    },
+    {
+      "id": "bb_upper_5m",
+      "type": "bb_upper_only",
+      "interval": "5m",
+      "period": 40,
+      "std": 2,
+      "enabled": true,
+      "label": "5분 볼밴 상한선 이상 (40, 2.0)"
+    },
+    {
+      "id": "price_ma_offset_5m",
+      "type": "price_ma_offset",
+      "interval": "5m",
+      "period": 50,
+      "offset_pct": 2,
+      "enabled": true,
+      "label": "5분 가격MA 오프셋 이상 (50, +2%)"
     }
   ]
 }

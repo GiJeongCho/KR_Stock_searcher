@@ -93,7 +93,7 @@ _scan_state = {
     "phase": 0,
     "status_msg": "서버 시작 중...",
     "progress_pct": 0,
-    "logic_id": "logic1",
+    "logic_id": "logic2",
     "active": {},
     "history": {},
     "cond_stats": {},
@@ -340,9 +340,7 @@ def _drain_queue_to_state(q, round_num):
             scanned = msg.get("scanned", msg.get("loaded", 0))
             pct_in_phase = scanned / total * 100
             if phase == 1:
-                pct = pct_in_phase * 0.3
-            elif phase == 2:
-                pct = 30 + pct_in_phase * 0.3
+                pct = pct_in_phase * 0.6
             else:
                 pct = 60 + pct_in_phase * 0.4
             _update_state(phase=phase, progress_pct=int(pct),
@@ -354,7 +352,7 @@ def _drain_queue_to_state(q, round_num):
 def _background_scanner():
     from queue import Queue
     from src.scanner import (
-        ROUND_INTERVAL, _daily_filter,
+        ROUND_INTERVAL,
         _preload_timeframes, _get_intervals_needed,
     )
     from src.ticker_provider import get_kr_tickers
@@ -388,27 +386,14 @@ def _background_scanner():
         try:
             logic = load_logic(logic_id)
         except Exception:
-            logic = load_logic("logic1")
+            logic = load_logic("logic2")
+
+        candidates = tickers
 
         _update_state(round=round_num, phase=1, progress_pct=0,
-                      status_msg=f"R#{round_num} 거래량/시총/등락률 필터 중...")
+                      status_msg=f"R#{round_num} {len(candidates):,}개 분봉 로드 중...")
 
         import concurrent.futures
-        def _filter_with_progress():
-            return _daily_filter(tickers, logic, q, _bg_stop)
-
-        vol_future = concurrent.futures.ThreadPoolExecutor(1).submit(_filter_with_progress)
-        while not vol_future.done():
-            _drain_queue_to_state(q, round_num)
-            time.sleep(0.5)
-        candidates = vol_future.result()
-        _drain_queue_to_state(q, round_num)
-        if _bg_stop.is_set():
-            break
-
-        _update_state(phase=2, progress_pct=30,
-                      status_msg=f"R#{round_num} 후보 {len(candidates):,}개 분봉 로드 중...")
-
         intervals_needed = _get_intervals_needed(logic)
         if candidates and intervals_needed:
             preload_future = concurrent.futures.ThreadPoolExecutor(1).submit(
@@ -422,7 +407,7 @@ def _background_scanner():
         if _bg_stop.is_set():
             break
 
-        _update_state(phase=3, progress_pct=60,
+        _update_state(phase=2, progress_pct=60,
                       status_msg=f"R#{round_num} {len(candidates):,}개 조건 평가 중...")
 
         matches = []
@@ -483,13 +468,7 @@ def _background_scanner():
                 }
                 _scan_state["history"].pop(tk, None)
 
-            vol_stats = {
-                "label": "거래량/시총/등락률 필터 (1단계)",
-                "pass": len(candidates),
-                "fail": len(tickers) - len(candidates),
-                "skip": 0,
-            }
-            _scan_state["cond_stats"] = {"_volume_filter": vol_stats, **cond_stats}
+            _scan_state["cond_stats"] = cond_stats
             _scan_state["phase"] = -1
             _scan_state["progress_pct"] = 100
             _scan_state["status_msg"] = (

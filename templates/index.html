@@ -171,8 +171,8 @@ header h1 { font-size: 1rem; font-weight: 700; color: #7dd3fc; }
 
   <div class="left">
     <div class="tab-bar">
-      <div class="tab active" id="tab-logic1" onclick="switchTab('logic1')">급등이</div>
-      <div class="tab" id="tab-logic2" onclick="switchTab('logic2')">벌떡이</div>
+      <div class="tab" id="tab-logic1" onclick="switchTab('logic1')">급등이</div>
+      <div class="tab active" id="tab-logic2" onclick="switchTab('logic2')">벌떡이</div>
     </div>
 
     <div class="section">
@@ -217,9 +217,8 @@ header h1 { font-size: 1rem; font-weight: 700; color: #7dd3fc; }
           <div class="progress-bar" id="progressBar"></div>
         </div>
         <div class="phase-labels">
-          <div class="phase-item"><div class="phase-dot" id="phase1dot"></div> 선필터</div>
-          <div class="phase-item"><div class="phase-dot" id="phase2dot"></div> 분봉 로드</div>
-          <div class="phase-item"><div class="phase-dot" id="phase3dot"></div> 조건 평가</div>
+          <div class="phase-item"><div class="phase-dot" id="phase1dot"></div> 분봉 로드</div>
+          <div class="phase-item"><div class="phase-dot" id="phase2dot"></div> 조건 평가</div>
         </div>
       </div>
 
@@ -248,7 +247,7 @@ header h1 { font-size: 1rem; font-weight: 700; color: #7dd3fc; }
 </div>
 
 <script>
-let currentLogicId = 'logic1';
+let currentLogicId = 'logic2';
 let logicData = {};
 let watchlist = [];
 let tickerNames = {};
@@ -456,7 +455,7 @@ function updateParam(condId, key, val, isArray, arrIdx, scale) {
 
 function startPolling() {
   pollResults();
-  pollTimer = setInterval(pollResults, 5000);
+  pollTimer = setInterval(pollResults, 2000);
 }
 
 async function pollResults() {
@@ -482,11 +481,10 @@ function updateUI(data) {
   document.getElementById('statusLabel').textContent =
     phase === -1 ? 'R#' + round + ' \uC644\uB8CC' :
     phase === 0 ? (round > 0 ? 'R#' + round + ' \uB300\uAE30' : '\uC2DC\uC791 \uC911...') :
-    phase === 1 ? 'R#' + round + ' \uC120\uD544\uD130' :
-    phase === 2 ? 'R#' + round + ' \uBD84\uBD09 \uB85C\uB4DC' :
-    phase === 3 ? 'R#' + round + ' \uC870\uAC74 \uD3C9\uAC00' : '\uB300\uAE30';
+    phase === 1 ? 'R#' + round + ' \uBD84\uBD09 \uB85C\uB4DC' :
+    phase === 2 ? 'R#' + round + ' \uC870\uAC74 \uD3C9\uAC00' : '\uB300\uAE30';
 
-  ['phase1dot','phase2dot','phase3dot'].forEach(function(id, i) {
+  ['phase1dot','phase2dot'].forEach(function(id, i) {
     var d = document.getElementById(id);
     var p = i + 1;
     if (phase === -1) d.className = 'phase-dot done';

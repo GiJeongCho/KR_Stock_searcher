@@ -388,7 +388,7 @@ def _background_scanner():
         except Exception:
             logic = load_logic("logic2")
 
-        candidates = tickers
+        candidates = [t for t in tickers if t.get("volume", 0) >= 10000]
 
         _update_state(round=round_num, phase=1, progress_pct=0,
                       status_msg=f"R#{round_num} {len(candidates):,}개 분봉 로드 중...")
